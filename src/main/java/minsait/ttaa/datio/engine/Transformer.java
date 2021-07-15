@@ -1,5 +1,6 @@
 package minsait.ttaa.datio.engine;
 
+import org.apache.parquet.format.StringType;
 import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -24,6 +25,8 @@ public class Transformer extends Writer {
 
         df = cleanData(df);
         df = exampleWindowFunction(df);
+        df = exampleWindowFunctionn2(df);
+        df = potentialVsOverall(df);
         df = columnSelection(df);
 
         // for show 100 records after your transformations and show the Dataset schema
@@ -37,10 +40,18 @@ public class Transformer extends Writer {
     private Dataset<Row> columnSelection(Dataset<Row> df) {
         return df.select(
                 shortName.column(),
-                overall.column(),
+                longName.column(),
+                age.column(),
                 heightCm.column(),
+                weightKg.column(),
+                nationality.column(),
+                clubName.column(),
+                overall.column(),
+                potential.column(),
                 teamPosition.column(),
-                catHeightByPosition.column()
+                catHeightByPosition.column(),
+                playerCat.column(),
+                potentialVsOverall.column()
         );
     }
 
@@ -96,4 +107,46 @@ public class Transformer extends Writer {
         return df;
     }
 
+
+    private Dataset<Row> exampleWindowFunctionn2(Dataset<Row> df) {
+        WindowSpec w = Window
+                .partitionBy(nationality.column())
+                .orderBy(overall.column().desc());
+
+        Column rank = rank().over(w);
+
+        Column rule = when(rank.$less(10), "A")
+                .when(rank.$less(20), "B")
+                .when(rank.$less(50), "C")
+                .otherwise("D");
+
+        df = df.withColumn(playerCat.getName(), rule);
+
+        return df;
+    }
+
+    private Dataset<Row> potentialVsOverall(Dataset<Row> df) {
+        Column rule_pvso = (df.col("overall").divide(df.col("potential")));
+        df = df.withColumn(potentialVsOverall.getName(), rule_pvso);
+
+        return df;
+    }
+
+
+    private Dataset<Row> function4(Dataset<Row> df) {
+        WindowSpec w = Window
+                .partitionBy(nationality.column())
+                .orderBy(overall.column().desc());
+
+        Column rank = rank().over(w);
+
+        Column rule = when(rank.$less(10), "A")
+                .when(rank.$less(20), "B")
+                .when(rank.$less(50), "C")
+                .otherwise("D");
+
+        df = df.withColumn(playerCat.getName(), rule);
+
+        return df;
+    }
 }

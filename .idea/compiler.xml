@@ -9,5 +9,8 @@
         <module name="TestJavaSpark" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="diagnostico_java_spark" target="8" />
+    </bytecodeTargetLevel>
   </component>
 </project>
